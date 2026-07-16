@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and run tests
+        env:
+          JWT_SECRET: 'YOUR_JWT_SECRET_KEY_FOR_TESTING_12345'
+          DATABASE_URL: 'postgresql://user:password@db:5432/database'
+          DB_USER: 'user'
+          DB_PASSWORD: 'password'
+          DB_DB: 'database'
+        run: |
+          docker compose up --build -d
+          docker compose exec -T app npm run format
+          docker compose exec -T app npm run lint
+          docker compose exec -T app npm test
+
+      - name: Stop containers
+        if: always()
+        run: docker compose down -v
